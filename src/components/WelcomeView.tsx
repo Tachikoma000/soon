@@ -3,7 +3,7 @@ import { LETTER, NOTE, people } from "@/lib/config";
 import { Sunflower } from "./Sunflower";
 
 const ERRORS: Record<string, string> = {
-  stranger: "Soon doesn’t know that account. Use the invite link to join.",
+  stranger: `That Google account isn’t on Soon. Try another one, or open the invite link from ${people()[0].name}.`,
   used: "This invite has already been used.",
   scopes: "Soon needs the calendar boxes ticked. Try once more.",
   cancelled: "Whenever you’re ready.",
