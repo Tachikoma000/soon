@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { acceptPlan, declinePlan, setSignal } from "@/app/actions";
+import { acceptPlan, createInvite, declinePlan, setSignal } from "@/app/actions";
 import type { SignalValue } from "@/lib/types";
 
 /** Free / Maybe / Can't for one day. Nothing pressed = go by my calendar. */
@@ -115,6 +115,61 @@ export function ActionButton({
     <button type="button" className={className} disabled={pending} onClick={() => start(() => action())}>
       {pending ? pendingText : children}
     </button>
+  );
+}
+
+/** Makes a one-time invite link for the other person and offers to copy or share it. */
+export function InviteLink({ themName, joinedAs }: { themName: string; joinedAs: string | null }) {
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [pending, start] = useTransition();
+  const canShare = typeof navigator !== "undefined" && "share" in navigator;
+
+  const make = () =>
+    start(async () => {
+      setCopied(false);
+      setLink(await createInvite());
+    });
+
+  return (
+    <div className="stack-lg">
+      <p className="small muted" style={{ fontSize: 14, lineHeight: 1.5 }}>
+        {joinedAs
+          ? `${themName} signs in as ${joinedAs}. If that’s the wrong account, make a new link: the next account used with it replaces this one.`
+          : `${themName} hasn’t joined yet. Make a link and send it, or open it on ${themName}’s phone. Whichever Google account is used with it becomes ${themName}’s, and the link stops working after that.`}
+      </p>
+      {link ? (
+        <div className="stack">
+          <input className="input" readOnly value={link} aria-label="Invite link" onFocus={(e) => e.currentTarget.select()} style={{ fontSize: 14 }} />
+          <div className="btn-row">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                navigator.clipboard.writeText(link).then(() => setCopied(true)).catch(() => {});
+              }}
+            >
+              {copied ? "Copied" : "Copy link"}
+            </button>
+            {canShare && (
+              <button
+                type="button"
+                className="btn btn--quiet"
+                onClick={() => {
+                  (navigator as Navigator & { share: (d: ShareData) => Promise<void> }).share({ title: "Soon", url: link }).catch(() => {});
+                }}
+              >
+                Share
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <button type="button" className={`btn btn--block${joinedAs ? " btn--quiet" : ""}`} onClick={make} disabled={pending}>
+          {pending ? "Making a link…" : joinedAs ? "Make a new sign-in link" : `Make ${themName}’s invite link`}
+        </button>
+      )}
+    </div>
   );
 }
 

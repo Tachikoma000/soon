@@ -91,6 +91,19 @@ export class DemoStore implements Store {
     const s = state().settings.get(id);
     if (s) state().settings.set(id, { ...s, ...patch, id });
   }
+  async email(id: string) {
+    return people().find((p) => p.id === id)?.email ?? null;
+  }
+  async findByEmail(email: string) {
+    return people().find((p) => p.email === email.toLowerCase())?.id ?? null;
+  }
+  async setInvite() {}
+  async peekInvite() {
+    return null;
+  }
+  async claimInvite() {
+    return null;
+  }
   async saveToken() {}
   async getToken() {
     return null;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { enterDemo, saveSettings } from "../actions";
+import { InviteLink } from "@/components/client";
 import { ChevronLeft } from "@/components/Icons";
 import { NotificationsToggle } from "@/components/Notifications";
 import { DRIVE_MINUTES, isDemo, people } from "@/lib/config";
@@ -16,6 +17,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const store = await getStore();
   const s = await store.settings(me.id);
   const demo = isDemo();
+  const [myEmail, theirEmail] = await Promise.all([store.email(me.id), store.email(them.id)]);
 
   let calendars: CalendarInfo[] | null = null;
   let calError: string | null = null;
@@ -112,6 +114,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <button type="submit" className="btn btn--block">Save</button>
       </form>
 
+      {!demo && (
+        <section className="stack-lg" id="invite">
+          <h2 className="eyebrow">{them.name}</h2>
+          <InviteLink themName={them.name} joinedAs={theirEmail} />
+        </section>
+      )}
+
       <section className="stack-lg">
         <h2 className="eyebrow">Notifications</h2>
         <p className="small muted" style={{ fontSize: 14, lineHeight: 1.45 }}>
@@ -135,7 +144,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           </>
         ) : (
           <>
-            <p className="small muted">Signed in as {me.email}</p>
+            <p className="small muted">Signed in as {myEmail}</p>
             <form action="/api/auth/signout" method="post">
               <button type="submit" className="linkish">Sign out</button>
             </form>

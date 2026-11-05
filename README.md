@@ -63,8 +63,8 @@ Import the repo in Vercel, then add these environment variables:
 
 | Variable | Value |
 | --- | --- |
-| `SOON_PEOPLE` | `[{"id":"tachi","name":"Tachi","email":"YOUR-GOOGLE-EMAIL","home":"San Antonio"},{"id":"annie","name":"Annie","email":"HER-GOOGLE-EMAIL","home":"Austin"}]` |
-| `SOON_URL` | `https://YOUR-DOMAIN` (no trailing slash) |
+| `SOON_PEOPLE` | `[{"id":"tachi","name":"Tachi","email":"YOUR-GOOGLE-EMAIL","home":"San Antonio"},{"id":"annie","name":"Annie","home":"Austin"}]` |
+| `SOON_URL` | Optional on Vercel (defaults to the production domain). Set it if you add a custom domain. |
 | `SOON_TIMEZONE` | `America/Chicago` |
 | `SOON_DRIVE_MINUTES` | `105` |
 | `SOON_NOTE` | The handwritten line on her welcome screen |
@@ -73,11 +73,15 @@ Import the repo in Vercel, then add these environment variables:
 | `SESSION_SECRET`, `TOKEN_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` | From step 1 |
 | `VAPID_SUBJECT` | `mailto:YOUR-EMAIL` |
 
-Only the two emails in `SOON_PEOPLE` can sign in.
+### 5. Invite the other person
 
-### 5. On each iPhone
+Leave the second person's `email` out of `SOON_PEOPLE`. Once you're signed in, go to **Settings → Make an invite link** and send it (or open it on their phone). Whichever Google account they sign in with from that link becomes theirs, and the link stops working. If they picked the wrong account, make a new link: the next account used with it replaces the old one.
 
-1. Open the site in **Safari** and sign in with Google.
+Nobody else can sign in: only your email and the account claimed through the invite.
+
+### 6. On each iPhone
+
+1. Open the site (or the invite link) in **Safari** and sign in with Google.
 2. **Share → Add to Home Screen**, then open Soon from the Home Screen.
 3. Tap **Turn on notifications**. (iOS only allows web notifications for apps on the Home Screen.)
 

@@ -23,18 +23,18 @@ export function redirectUri(): string {
   return `${appUrl()}/api/auth/callback`;
 }
 
-export function authUrl(state: string, loginHint?: string): string {
+export function authUrl(state: string): string {
   const q = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID as string,
     redirect_uri: redirectUri(),
     response_type: "code",
     scope: SCOPES.join(" "),
     access_type: "offline",
-    prompt: "consent",
+    // Always show the account chooser, so someone with several Google accounts picks the right one.
+    prompt: "select_account consent",
     include_granted_scopes: "true",
     state,
   });
-  if (loginHint) q.set("login_hint", loginHint);
   return `https://accounts.google.com/o/oauth2/v2/auth?${q}`;
 }
 

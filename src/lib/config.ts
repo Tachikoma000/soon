@@ -1,7 +1,8 @@
 export type PersonConfig = {
   id: string;
   name: string;
-  email: string;
+  /** Optional: someone without an email here joins through an invite link instead. */
+  email: string | null;
   home: string;
 };
 
@@ -31,13 +32,13 @@ export function people(): PersonConfig[] {
   }
   cached = parsed.map((p, i) => {
     const o = p as Record<string, unknown>;
-    if (typeof o.id !== "string" || typeof o.name !== "string" || typeof o.email !== "string") {
-      throw new Error(`SOON_PEOPLE[${i}] needs id, name and email`);
+    if (typeof o.id !== "string" || typeof o.name !== "string") {
+      throw new Error(`SOON_PEOPLE[${i}] needs an id and a name`);
     }
     return {
       id: o.id,
       name: o.name,
-      email: o.email.toLowerCase(),
+      email: typeof o.email === "string" && o.email.includes("@") ? o.email.toLowerCase() : null,
       home: typeof o.home === "string" ? o.home : o.name + "'s",
     };
   });
@@ -56,22 +57,24 @@ export function otherOf(id: string): PersonConfig {
   return p;
 }
 
-export function personByEmail(email: string): PersonConfig | undefined {
-  const e = email.toLowerCase();
-  return people().find((p) => p.email === e);
-}
-
 export const TZ = process.env.SOON_TIMEZONE || "America/Chicago";
 export const DRIVE_MINUTES = Number(process.env.SOON_DRIVE_MINUTES || 105);
 export const NOTE = process.env.SOON_NOTE || "for all our weekends ahead — T";
 
+export function databaseUrl(): string | null {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || null;
+}
+
 /** Demo mode: no database configured, so the app runs on sample data. */
 export function isDemo(): boolean {
-  return !process.env.DATABASE_URL;
+  return !databaseUrl();
 }
 
 export function appUrl(): string {
-  return (process.env.SOON_URL || "http://localhost:3000").replace(/\/$/, "");
+  if (process.env.SOON_URL) return process.env.SOON_URL.replace(/\/$/, "");
+  // Vercel sets this to the production domain, without the protocol.
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  return "http://localhost:3000";
 }
 
 export function googleConfigured(): boolean {

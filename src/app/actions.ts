@@ -180,6 +180,14 @@ export async function finishOnboarding(): Promise<void> {
   redirect("/");
 }
 
+/** A one-time link for the other person to join with whichever Google account they like. */
+export async function createInvite(): Promise<string | null> {
+  const { them } = await requireViewer();
+  if (isDemo()) return null;
+  const { makeInvite } = await import("@/lib/invite");
+  return makeInvite(them.id);
+}
+
 export async function enterDemo(id: string): Promise<void> {
   if (!isDemo() || !people().some((p) => p.id === id)) return;
   await setDemoViewer(id);

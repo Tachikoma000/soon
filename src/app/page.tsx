@@ -56,7 +56,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
         {d.meConnected && !d.themConnected && (
           <div className="notice">
             <span>
-              <strong>{them.name} hasn’t connected yet.</strong> Until then, {them.name}’s days show as free.
+              <strong>{them.name} hasn’t connected yet.</strong> Until then, {them.name}’s days show as free.{" "}
+              <Link href="/settings#invite">Send the invite</Link>
             </span>
           </div>
         )}

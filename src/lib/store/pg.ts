@@ -6,7 +6,8 @@ import { people } from "../config";
 const SCHEMA = `
 create table if not exists soon_people (
   id text primary key,
-  email text not null,
+  email text,
+  invite_hash text,
   refresh_token text,
   event_title text,
   event_private boolean not null default true,
@@ -88,6 +89,7 @@ export class PgStore implements Store {
       max: 3,
       idle_timeout: 20,
       prepare: false,
+      onnotice: () => {},
       // Dates come back as plain strings so time zones never shift a calendar day.
       types: { date: { to: 1082, from: [1082], serialize: (x: string) => x, parse: (x: string) => x } },
     });
@@ -98,9 +100,10 @@ export class PgStore implements Store {
       this.ready = (async () => {
         await this.sql.unsafe(SCHEMA);
         for (const p of people()) {
+          // An email in SOON_PEOPLE wins; otherwise keep the one they joined with.
           await this.sql`
             insert into soon_people (id, email) values (${p.id}, ${p.email})
-            on conflict (id) do update set email = excluded.email`;
+            on conflict (id) do update set email = coalesce(excluded.email, soon_people.email)`;
         }
       })().catch((e) => {
         this.ready = null;
@@ -138,6 +141,39 @@ export class PgStore implements Store {
         onboarded = ${next.onboarded},
         updated_at = now()
       where id = ${id}`;
+  }
+
+  async email(id: string) {
+    await this.init();
+    const [r] = await this.sql<Row[]>`select email from soon_people where id = ${id}`;
+    return (r?.email as string | null) ?? null;
+  }
+  async findByEmail(email: string) {
+    await this.init();
+    const [r] = await this.sql<Row[]>`select id from soon_people where lower(email) = ${email.toLowerCase()}`;
+    return r ? String(r.id) : null;
+  }
+  async setInvite(id: string, hash: string | null) {
+    await this.init();
+    await this.sql`update soon_people set invite_hash = ${hash}, updated_at = now() where id = ${id}`;
+  }
+  async peekInvite(hash: string) {
+    await this.init();
+    const [r] = await this.sql<Row[]>`select id from soon_people where invite_hash = ${hash}`;
+    return r ? String(r.id) : null;
+  }
+  async claimInvite(hash: string, email: string) {
+    await this.init();
+    const e = email.toLowerCase();
+    const [r] = await this.sql<Row[]>`
+      update soon_people set
+        refresh_token = case when lower(coalesce(email, '')) = ${e} then refresh_token else null end,
+        email = ${e},
+        invite_hash = null,
+        updated_at = now()
+      where invite_hash = ${hash}
+      returning id`;
+    return r ? String(r.id) : null;
   }
 
   async saveToken(id: string, encrypted: string) {
