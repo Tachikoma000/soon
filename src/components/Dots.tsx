@@ -1,31 +1,8 @@
 import type { DayState } from "@/lib/availability";
 
-export function Dot({ who, state, small }: { who: "me" | "them"; state: DayState; small?: boolean }) {
-  return <span className={`dot dot--${who} dot--${state}${small ? " dot--sm" : ""}`} />;
-}
-
-export function WeekendDots({ days }: { days: Array<{ letter: string; me: DayState; them: DayState }> }) {
-  return (
-    <div className="dots" aria-hidden="true">
-      {days.map((d, i) => (
-        <div className="dots__day" key={i}>
-          <span className="dots__letter">{d.letter}</span>
-          <Dot who="me" state={d.me} />
-          <Dot who="them" state={d.them} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-export function DotKey({ withPlanned = true, extra }: { withPlanned?: boolean; extra?: React.ReactNode }) {
-  return (
-    <div className="key" aria-hidden="true">
-      <span><span className="dot dot--key-f" />Free</span>
-      <span><span className="dot dot--key-m" />Maybe</span>
-      <span><span className="dot dot--key-b" />Busy</span>
-      {withPlanned && <span><span className="dot dot--key-p" />Together</span>}
-      {extra}
-    </div>
-  );
+/** A small mark for someone's day: a dot when busy, a dashed ring for maybe, nothing when free. */
+export function Mark({ who, state, large }: { who: "me" | "them"; state: DayState; large?: boolean }) {
+  if (state === "f") return null;
+  const kind = state === "m" ? " mark--maybe" : state === "p" ? " mark--sun" : "";
+  return <span className={`mark mark--${who}${kind}${large ? " mark--lg" : ""}`} aria-hidden="true" />;
 }

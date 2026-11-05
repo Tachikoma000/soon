@@ -6,44 +6,45 @@ import { ShareIcon } from "./Icons";
 import { isStandalone, NotificationsToggle } from "./Notifications";
 import { Sunflower } from "./Sunflower";
 
-export function HelloSteps({ name, them, publicKey, demo }: { name: string; them: string; publicKey: string | null; demo: boolean }) {
+type Props = {
+  name: string;
+  them: string;
+  /** True when the maker set this up for this person, so the words can come from them. */
+  invited: boolean;
+  publicKey: string | null;
+  demo: boolean;
+};
+
+export function HelloSteps({ name, them, invited, publicKey, demo }: Props) {
   const [standalone, setStandalone] = useState<boolean | null>(null);
   useEffect(() => setStandalone(isStandalone()), []);
 
   return (
-    <main className="screen screen--plain" style={{ gap: 28, paddingTop: "calc(var(--safe-top) + 48px)" }}>
-      <div className="stack rise" style={{ alignItems: "flex-start", gap: 14 }}>
-        <Sunflower bloom={0.55} size={64} />
-        <h1 className="title">Hi {name}.</h1>
-        <p className="lede">Two small things and you’re set.</p>
+    <main className="screen screen--plain" style={{ gap: 32, paddingTop: "calc(var(--safe-top) + 56px)" }}>
+      <div className="stack rise" style={{ gap: 18 }}>
+        <Sunflower bloom={0.55} size={60} />
+        <h1 className="title">{invited ? `You’re in, ${name}.` : `Hi ${name}.`}</h1>
       </div>
 
-      <section className="stack-lg rise rise-2" style={{ paddingTop: 18, borderTop: "1px solid var(--line)" }}>
-        <div className="row-between">
-          <h2 className="serif" style={{ fontSize: 22 }}>1 · Put Soon on your Home Screen</h2>
-        </div>
+      <section className="stack rise rise-2" style={{ gap: 8 }}>
+        <h2 className="h2">Keep it on your Home Screen</h2>
         {standalone ? (
-          <p className="small muted">Done. You opened Soon from your Home Screen.</p>
+          <p className="muted">Done.</p>
         ) : (
-          <ol className="stack" style={{ paddingLeft: 18, margin: 0, fontSize: 15, lineHeight: 1.5, color: "var(--ink-2)" }}>
-            <li>In Safari, tap <ShareIcon size={15} /> <strong style={{ color: "var(--ink)" }}>Share</strong>.</li>
-            <li>Choose <strong style={{ color: "var(--ink)" }}>Add to Home Screen</strong>.</li>
-            <li>Open Soon from your Home Screen to finish here.</li>
-          </ol>
+          <p className="muted" style={{ lineHeight: 1.55 }}>
+            In Safari, tap <ShareIcon size={15} /> then <span style={{ color: "var(--ink)" }}>Add to Home Screen</span>, and open Soon from there.
+          </p>
         )}
       </section>
 
-      <section className="stack-lg rise rise-3" style={{ paddingTop: 18, borderTop: "1px solid var(--line)" }}>
-        <h2 className="serif" style={{ fontSize: 22 }}>2 · Hear from {them}</h2>
-        <p className="small muted" style={{ fontSize: 14.5, lineHeight: 1.5 }}>
-          A note when {them} proposes a plan, says yes, or is on the way.
-        </p>
+      <section className="stack rise rise-3" style={{ gap: 12 }}>
+        <h2 className="h2">{invited ? "So you know when I’m on my way" : `So you hear from ${them}`}</h2>
         <NotificationsToggle publicKey={publicKey} demo={demo} />
       </section>
 
       <form action={finishOnboarding} style={{ marginTop: "auto" }}>
-        <button type="submit" className="btn btn--block">
-          {standalone ? "Let’s go" : "Skip for now"}
+        <button type="submit" className={`btn btn--block${standalone ? "" : " btn--quiet"}`}>
+          {standalone ? "Done" : "Later"}
         </button>
       </form>
     </main>

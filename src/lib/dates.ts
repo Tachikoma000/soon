@@ -168,6 +168,20 @@ export function fmtDuration(min: number): string {
   return m === 0 ? `${h} h` : `${h} h ${m} m`;
 }
 
+/** "Friday the 20th" */
+export function fmtFriendlyDay(day: string): string {
+  const d = Number(day.slice(8));
+  const tens = d % 100;
+  const suffix = tens >= 11 && tens <= 13 ? "th" : d % 10 === 1 ? "st" : d % 10 === 2 ? "nd" : d % 10 === 3 ? "rd" : "th";
+  return `${DOW_LONG[dow(day)]} the ${d}${suffix}`;
+}
+
+/** "Friday", "Friday and Saturday", "Friday, Saturday and Sunday" */
+export function listJoin(items: string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
 /** The Friday that starts the weekend containing `day` (or the next one on Mon–Thu). */
 export function weekendFriday(day: string): string {
   const w = dow(day);

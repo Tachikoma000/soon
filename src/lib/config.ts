@@ -59,7 +59,10 @@ export function otherOf(id: string): PersonConfig {
 
 export const TZ = process.env.SOON_TIMEZONE || "America/Chicago";
 export const DRIVE_MINUTES = Number(process.env.SOON_DRIVE_MINUTES || 105);
+/** The handwritten sign-off on the invite. */
 export const NOTE = process.env.SOON_NOTE || "for all our weekends ahead — T";
+/** The one line under "Hi Annie." on the invite. */
+export const LETTER = process.env.SOON_LETTER || "I made us a little place to find our next weekend.";
 
 export function databaseUrl(): string | null {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || null;

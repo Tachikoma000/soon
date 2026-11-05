@@ -1,10 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CalendarIcon, RouteIcon, SunIcon } from "./Icons";
 
-type Tab = "home" | "calendar" | "plans";
-
-export function TabBar({ current, badge = 0 }: { current: Tab; badge?: number }) {
-  const tabs: Array<{ id: Tab; href: string; label: string; icon: React.ReactNode }> = [
+export function TabBar({ badge = 0 }: { badge?: number }) {
+  const path = usePathname();
+  const current = path.startsWith("/calendar") ? "calendar" : path.startsWith("/plans") ? "plans" : "home";
+  const tabs = [
     { id: "home", href: "/", label: "Soon", icon: <SunIcon /> },
     { id: "calendar", href: "/calendar", label: "Calendar", icon: <CalendarIcon /> },
     { id: "plans", href: "/plans", label: "Plans", icon: <RouteIcon /> },
@@ -17,7 +20,7 @@ export function TabBar({ current, badge = 0 }: { current: Tab; badge?: number })
             {t.icon}
             {t.label}
             {t.id === "plans" && badge > 0 && (
-              <span className="tab__badge" aria-label={`${badge} waiting`}>
+              <span className="tab__badge" aria-label={`${badge} waiting for you`}>
                 {badge}
               </span>
             )}

@@ -3,7 +3,7 @@
 import { buildDays, daySummary, lane, personDayLine, type DayMap, type DayState } from "./availability";
 import { busyFor } from "./busy";
 import { people, TZ, type PersonConfig } from "./config";
-import { addDays, daysBetween, dow, fmtRange, rangeDays, today, weekendFriday } from "./dates";
+import { DOW_LONG, addDays, daysBetween, dow, fmtRange, listJoin, rangeDays, today, weekendFriday } from "./dates";
 import { daysUntil, isActive, traveler } from "./plans";
 import { getStore } from "./store";
 import type { Plan, Road } from "./types";
@@ -65,15 +65,15 @@ function weekendRow(fri: string, map: DayMap, plans: Plan[], ctx: Ctx, todayStr:
   if (planId) {
     const p = plans.find((x) => x.id === planId) as Plan;
     let note: string;
-    if (p.kind === "trip") note = `Planned · ${p.title || "your trip"}`;
-    else if (p.host === me.id) note = `Planned · ${them.name}’s here`;
-    else note = `Planned · you’re in ${them.home}`;
+    if (p.kind === "trip") note = p.title || "Our trip";
+    else if (p.host === me.id) note = `${them.name}’s here`;
+    else note = `You’re in ${them.home}`;
     return { fri, range: fmtRange(fri, sun), note: prefix + note, open: false, planned: true, pending: false, days };
   }
 
   const proposed = plans.find((p) => p.status === "proposed" && p.endDay >= todayStr && p.startDay <= sun && p.endDay >= fri);
   if (proposed) {
-    const note = proposed.proposedBy === me.id ? `Proposed · waiting on ${them.name}` : `${them.name} proposed this weekend`;
+    const note = proposed.proposedBy === me.id ? `Waiting on ${them.name}` : `${them.name} asked about this one`;
     return { fri, range: fmtRange(fri, sun), note: prefix + note, open: false, planned: false, pending: true, days };
   }
 
@@ -82,13 +82,13 @@ function weekendRow(fri: string, map: DayMap, plans: Plan[], ctx: Ctx, todayStr:
   let note: string;
   let open = false;
   if (free(0) && free(1) && free(2)) {
-    note = "Both free, all three days";
+    note = "You’re both free";
     open = true;
   } else if (free(1) && free(2)) {
-    note = "Sat–Sun open for you both";
+    note = "Free Saturday and Sunday";
     open = true;
   } else if (all("me", "b").length === 3 && all("them", "b").length === 3) {
-    note = "You’re both booked";
+    note = "You’re both busy";
   } else {
     const parts: string[] = [];
     const tb = all("them", "b");
@@ -103,7 +103,7 @@ function weekendRow(fri: string, map: DayMap, plans: Plan[], ctx: Ctx, todayStr:
     else if (mb.length) parts.push(`You’re busy ${daysPhrase(mb)}`);
     if (tm.length) parts.push(`${them.name} said maybe ${daysPhrase(tm)}`);
     if (mm.length) parts.push(`You said maybe ${daysPhrase(mm)}`);
-    note = parts.slice(0, 2).join(" · ") || "Partly open";
+    note = parts.slice(0, 2).join(" · ") || "Partly free";
   }
   return { fri, range: fmtRange(fri, sun), note: prefix + note, open, planned: false, pending: false, days };
 }
@@ -120,8 +120,6 @@ export async function loadWeekends(ctx: Ctx, count = 8) {
 }
 
 // ── Home ──────────────────────────────────────────────────────────────
-
-export type ProposalDayLine = { day: string; line: string };
 
 export async function loadHome(ctx: Ctx) {
   const { me, them } = ctx;
@@ -142,13 +140,22 @@ export async function loadHome(ctx: Ctx) {
     .sort((a, b) => b.createdAt - a.createdAt);
   const waiting = plans.filter((p) => p.status === "proposed" && p.proposedBy === me.id && p.endDay >= todayStr);
 
-  // What my days look like for the newest incoming proposal.
-  let incomingDays: ProposalDayLine[] = [];
+  // One line about my own days for the newest incoming proposal: "You’re busy Friday until 5:30 pm."
+  let incomingNote: string | null = null;
   if (incoming[0]) {
     const p = incoming[0];
-    const end = daysBetween(p.startDay, p.endDay) > 3 ? addDays(p.startDay, 3) : p.endDay;
+    const end = daysBetween(p.startDay, p.endDay) > 13 ? addDays(p.startDay, 13) : p.endDay;
     const { map } = await dayMap(p.startDay, end);
-    incomingDays = rangeDays(p.startDay, end).map((d) => ({ day: d, line: personDayLine(map[d][me.id]) }));
+    const bits = rangeDays(p.startDay, end)
+      .map((d) => {
+        const line = personDayLine(map[d][me.id]);
+        if (line === "Nothing planned" || line === "Together") return null;
+        const name = DOW_LONG[dow(d)];
+        if (line === "You said you can’t") return `${name} (you said no)`;
+        return `${name} ${line.replace(/^Busy /, "")}`;
+      })
+      .filter((x): x is string => !!x);
+    incomingNote = bits.length ? `You’re busy ${listJoin(bits)}.` : "You’re free.";
   }
 
   let liveRoad: (Road & { plan: Plan }) | null = null;
@@ -167,7 +174,7 @@ export async function loadHome(ctx: Ctx) {
     nextTrip,
     nextTripDays: nextTrip ? daysUntil(nextTrip, todayStr) : null,
     incoming,
-    incomingDays,
+    incomingNote,
     waiting,
     rows,
     nextFree,

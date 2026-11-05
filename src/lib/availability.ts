@@ -116,7 +116,7 @@ export function daySummary(day: string, info: DayInfo, me: Who, them: Who): stri
   const wake = (pd: PersonDay) => pd.blocks.filter(([x, y]) => y > WAKE[0] && x < WAKE[1]);
   const wa = wake(a);
   const wb = wake(b);
-  if (!wa.length && !wb.length) return "Both free all day";
+  if (!wa.length && !wb.length) return "You’re both free";
 
   // A Friday with daytime work for one or both: when does the evening open up?
   if (dow(day) === 5) {
@@ -124,7 +124,7 @@ export function daySummary(day: string, info: DayInfo, me: Who, them: Who): stri
     const evening = [...wa, ...wb].filter(([x]) => x >= 15 * 60);
     if (daytime.length && !evening.length) {
       const from = Math.max(...daytime.map(([, y]) => y));
-      return `Free together from ${fmtTime(from)}`;
+      return `Both free from ${fmtTime(from)}`;
     }
   }
 

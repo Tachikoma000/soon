@@ -8,22 +8,28 @@ export function traveler(plan: Plan): string | null {
   return otherOf(plan.host).id;
 }
 
-/** Short name for a plan: the host's city for a visit, the trip's name for a trip. */
+/** A visit is named by the city; a trip by what you called it. */
 export function planName(plan: Plan): string {
-  if (plan.kind === "trip") return plan.title || "A trip";
+  if (plan.kind === "trip") return plan.title || "Our trip";
   return plan.host ? person(plan.host).home : "A visit";
 }
 
-/** "until Austin" · "until Annie’s here" · "until Winter trip" */
+/** "until Annie" · "until Big Bend" */
 export function countdownPhrase(plan: Plan, me: PersonConfig): string {
-  if (plan.kind === "trip") return `until ${plan.title || "your trip"}`;
-  if (plan.host === me.id) return `until ${otherOf(me.id).name}’s here`;
-  return `until ${planName(plan)}`;
+  if (plan.kind === "trip") return `until ${plan.title || "our trip"}`;
+  return `until ${otherOf(me.id).name}`;
+}
+
+/** "In Austin" · "At home" · "Big Bend" */
+export function whereLine(plan: Plan, me: PersonConfig): string {
+  if (plan.kind === "trip") return plan.title || "Our trip";
+  if (plan.host === me.id) return "At home";
+  return `In ${planName(plan)}`;
 }
 
 export function proposalHeadline(plan: Plan, me: PersonConfig): string {
   const them = otherOf(me.id).name;
-  if (plan.kind === "trip") return `${them} has a trip idea.`;
+  if (plan.kind === "trip") return plan.title ? `${them} wants to go to ${plan.title}.` : `${them} has a trip idea.`;
   if (plan.host === me.id) return `${them} wants to come see you.`;
   return `${them} wants you to come visit.`;
 }

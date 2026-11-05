@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { forgetBusy } from "@/lib/busy";
 import { removePlanFromCalendars, writePlanToCalendars } from "@/lib/calendarWrites";
 import { DRIVE_MINUTES, isDemo, people, TZ } from "@/lib/config";
-import { daysBetween, fmtRange, fmtTime, isDay, today, zoned } from "@/lib/dates";
+import { daysBetween, fmtFriendlyDay, fmtRange, fmtTime, isDay, today, zoned } from "@/lib/dates";
 import { notify, pendingCount } from "@/lib/push";
 import { proposalHeadline, traveler } from "@/lib/plans";
 import { requireViewer, setDemoViewer } from "@/lib/session";
@@ -54,7 +54,7 @@ export async function proposePlan(form: FormData): Promise<void> {
   const plan = await store.createPlan({
     kind: isTrip ? "trip" : "visit",
     host,
-    title: isTrip ? clean(form.get("title"), 60) || "Trip together" : null,
+    title: isTrip ? clean(form.get("title"), 60) : null,
     startDay: start,
     endDay: end,
     arriveTime: isTrip ? null : arrive && /^\d{2}:\d{2}$/.test(arrive) ? arrive : "17:30",
@@ -87,7 +87,7 @@ export async function acceptPlan(planId: string, eventTitle?: string | null): Pr
   await store.updatePlan(plan.id, { status: "accepted", eventTitles: titles, eventIds, respondedAt: Date.now() });
   await notify(them.id, {
     title: `${me.name} said yes`,
-    body: `${fmtRange(plan.startDay, plan.endDay)} is on both your calendars.`,
+    body: `See you ${fmtFriendlyDay(plan.startDay)}.`,
     url: "/",
     tag: plan.id,
   });
@@ -102,8 +102,8 @@ export async function declinePlan(planId: string): Promise<void> {
   if (!plan || plan.status !== "proposed" || plan.proposedBy !== them.id) return;
   await store.updatePlan(plan.id, { status: "declined", respondedAt: Date.now() });
   await notify(them.id, {
-    title: `${me.name} can’t make ${fmtRange(plan.startDay, plan.endDay)}`,
-    body: "Pick another time together?",
+    title: `${me.name} can’t do ${fmtRange(plan.startDay, plan.endDay)}`,
+    body: "Find another weekend?",
     url: "/calendar",
     tag: plan.id,
   });
@@ -122,8 +122,8 @@ export async function cancelPlan(planId: string): Promise<void> {
   const road = await store.road();
   if (road?.planId === plan.id) await store.setRoad(null);
   await notify(them.id, {
-    title: plan.status === "accepted" ? `${me.name} cancelled ${fmtRange(plan.startDay, plan.endDay)}` : `${me.name} took back an idea`,
-    body: plan.status === "accepted" ? "It’s off both your calendars." : fmtRange(plan.startDay, plan.endDay),
+    title: plan.status === "accepted" ? `${me.name} cancelled ${fmtRange(plan.startDay, plan.endDay)}` : `${me.name} took back ${fmtRange(plan.startDay, plan.endDay)}`,
+    body: plan.status === "accepted" ? "It’s off both your calendars." : "",
     url: "/plans",
     tag: plan.id,
   });
@@ -148,14 +148,9 @@ export async function leaveNow(planId: string): Promise<void> {
 }
 
 export async function clearRoad(): Promise<void> {
-  const { me, them } = await requireViewer();
+  await requireViewer();
   const store = await getStore();
-  const road = await store.road();
-  if (!road) return;
   await store.setRoad(null);
-  if (road.personId === me.id) {
-    await notify(them.id, { title: `${me.name} is here`, body: "Enjoy the weekend.", url: "/", tag: "road" });
-  }
   refresh();
 }
 

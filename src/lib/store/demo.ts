@@ -36,7 +36,7 @@ function seed(): DemoState {
   add({ id: "demo-past", kind: "visit", host: a.id, title: null, startDay: at(-7), endDay: at(-5), arriveTime: "18:00", note: null, proposedBy: b.id, status: "accepted", eventTitles: {}, ago: 20 });
   add({ id: "demo-next", kind: "visit", host: b.id, title: null, startDay: at(7), endDay: at(9), arriveTime: "17:30", note: null, proposedBy: a.id, status: "accepted", eventTitles: { [a.id]: "Personal" }, ago: 10 });
   add({ id: "demo-proposed", kind: "visit", host: b.id, title: null, startDay: at(14), endDay: at(16), arriveTime: "17:30", note: "Farmers market on Saturday?", proposedBy: a.id, status: "proposed", eventTitles: { [a.id]: "Personal" }, ago: 0 });
-  add({ id: "demo-trip", kind: "trip", host: null, title: "Winter trip", startDay: at(50), endDay: at(55), arriveTime: null, note: "Somewhere warm", proposedBy: b.id, status: "accepted", eventTitles: {}, ago: 14 });
+  add({ id: "demo-trip", kind: "trip", host: null, title: "Big Bend", startDay: at(50), endDay: at(55), arriveTime: null, note: "Hiking and stars", proposedBy: b.id, status: "accepted", eventTitles: {}, ago: 14 });
 
   const signals = new Map<string, Signal>();
   const sig = (personId: string, day: string, value: SignalValue) => signals.set(`${personId}|${day}`, { personId, day, value });
