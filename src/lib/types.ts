@@ -39,6 +39,8 @@ export type PersonSettings = {
   includeDrive: boolean;
   /** Google calendar ids that count toward busy. */
   calendars: string[];
+  /** Let the other person see event names, not just busy times. */
+  shareDetails: boolean;
   connected: boolean;
   onboarded: boolean;
 };

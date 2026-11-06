@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { acceptPlan, createInvite, declinePlan, setSignal } from "@/app/actions";
+import { acceptPlan, createInvite, declinePlan, setShareDetails, setSignal } from "@/app/actions";
 import type { SignalValue } from "@/lib/types";
 
 /** Free / Maybe / Can't for one day. Nothing pressed = go by the calendar. */
@@ -90,6 +90,36 @@ export function ActionButton({
     <button type="button" className={className} disabled={pending} onClick={() => start(() => action())}>
       {pending ? pendingText : children}
     </button>
+  );
+}
+
+/** "Let Annie see what's on my calendar". Turning it on may take a quick trip through Google. */
+export function ShareToggle({ themName, on, note }: { themName: string; on: boolean; note: string | null }) {
+  const [checked, setChecked] = useState(on);
+  const [pending, start] = useTransition();
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      <label className="switch-row" style={{ borderTop: "1px solid var(--line)" }}>
+        <span>Let {themName} see what’s on my calendar</span>
+        <span className="switch">
+          <input
+            type="checkbox"
+            checked={checked}
+            disabled={pending}
+            onChange={(e) => {
+              const next = e.target.checked;
+              setChecked(next);
+              start(async () => {
+                const r = await setShareDetails(next);
+                if (r === "consent") window.location.href = "/api/auth/google?share=1";
+              });
+            }}
+          />
+          <span />
+        </span>
+      </label>
+      <p className="small faint">{note ?? "Private events stay hidden."}</p>
+    </div>
   );
 }
 

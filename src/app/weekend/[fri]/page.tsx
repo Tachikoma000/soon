@@ -4,7 +4,7 @@ import { SignalControl } from "@/components/client";
 import { ChevronLeft } from "@/components/Icons";
 import { SunMark } from "@/components/Sunflower";
 import { loadWeekend } from "@/lib/data";
-import { DOW_LONG, dow, isDay, weekendFriday } from "@/lib/dates";
+import { DOW_LONG, dow, fmtTimeRange, isDay, weekendFriday } from "@/lib/dates";
 import { planName } from "@/lib/plans";
 import { requireViewer } from "@/lib/session";
 
@@ -87,6 +87,17 @@ export default async function WeekendPage({ params }: { params: Promise<{ fri: s
                   ))}
                 </div>
               </div>
+              {d.them.events && d.them.events.length > 0 && (
+                <ul className="agenda" aria-label={`${them.name}’s ${DOW_LONG[d.dow]}`}>
+                  {d.them.events.map((e, i) => (
+                    <li key={i}>
+                      <span className="mark mark--them mark--lg" aria-hidden="true" />
+                      <span className="agenda__time">{e.from === null ? "All day" : fmtTimeRange(e.from, e.to as number)}</span>
+                      <span className="agenda__title">{e.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </section>

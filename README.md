@@ -46,6 +46,7 @@ Copy the four lines it prints (`SESSION_SECRET`, `TOKEN_KEY`, `VAPID_PUBLIC_KEY`
    - `.../auth/calendar.freebusy`
    - `.../auth/calendar.calendarlist.readonly`
    - `.../auth/calendar.events.owned`
+   - `.../auth/calendar.events.readonly` (only used if someone turns on "Let … see what's on my calendar")
 5. **Audience → Publish app** so it's **In production**. Don't leave it in *Testing*: in testing, Google expires the sign-in every 7 days. You don't need Google's verification for two people; you'll each see a "Google hasn't verified this app" screen once and tap **Advanced → Go to Soon**.
 6. **Clients → Create client → Web application**.
    - Authorized redirect URI: `https://YOUR-DOMAIN/api/auth/callback` (add `http://localhost:3000/api/auth/callback` too if you want to test locally).
@@ -101,6 +102,7 @@ Ordinary 9–5 workdays don't count, otherwise every weekday would look blocked.
 
 ## Privacy
 
+- By default each person shares only busy times. In Settings, either of you can turn on **Let … see what's on my calendar**; the other person then sees event names on the weekend view. Events marked Private in Google still show only as busy. Turning it on asks Google for one more permission (`calendar.events.readonly`).
 - Google refresh tokens are encrypted at rest (AES-256-GCM, `TOKEN_KEY`).
 - Plans written to your calendar can be marked **private**: anyone else who can see your calendar sees "busy". People with edit access to your calendar (an assistant, say) can still open private events, so pick a neutral title too.
 - Settings let each person choose which of their calendars count.

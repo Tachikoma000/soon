@@ -1,7 +1,7 @@
 // Loaders that gather everything a screen needs, from one person's point of view.
 
 import { buildDays, daySummary, lane, personDayLine, type DayMap, type DayState } from "./availability";
-import { busyFor } from "./busy";
+import { busyFor, namedEventsFor, type DayEvent } from "./busy";
 import { people, TZ, type PersonConfig } from "./config";
 import { DOW_LONG, addDays, daysBetween, dow, fmtRange, listJoin, rangeDays, today, weekendFriday } from "./dates";
 import { daysUntil, isActive, traveler } from "./plans";
@@ -52,7 +52,15 @@ function daysPhrase(idx: number[]): string {
   return NAMES[idx[0]];
 }
 
-function weekendRow(fri: string, map: DayMap, plans: Plan[], ctx: Ctx, todayStr: string): WeekendRow {
+/** The event that best explains a busy day: an all-day one, else the longest. */
+function mainTitle(events: DayEvent[] | undefined): string | null {
+  if (!events?.length) return null;
+  const allDay = events.find((e) => e.from === null);
+  const pick = allDay ?? [...events].sort((a, b) => (b.to! - b.from!) - (a.to! - a.from!))[0];
+  return pick.title === "Busy" ? null : pick.title;
+}
+
+function weekendRow(fri: string, map: DayMap, plans: Plan[], ctx: Ctx, todayStr: string, named: Record<string, DayEvent[]> | null): WeekendRow {
   const { me, them } = ctx;
   const ds = [fri, addDays(fri, 1), addDays(fri, 2)];
   const st = ds.map((d) => ({ me: map[d][me.id], them: map[d][them.id] }));
@@ -99,8 +107,12 @@ function weekendRow(fri: string, map: DayMap, plans: Plan[], ctx: Ctx, todayStr:
       const both = tb.filter((i) => mb.includes(i));
       if (both.length === tb.length && both.length === mb.length) parts.push(`You’re both busy ${daysPhrase(both)}`);
       else parts.push(`${them.name}’s busy ${daysPhrase(tb)}`, `you ${daysPhrase(mb)}`);
-    } else if (tb.length) parts.push(`${them.name}’s busy ${daysPhrase(tb)}`);
-    else if (mb.length) parts.push(`You’re busy ${daysPhrase(mb)}`);
+    } else if (tb.length) {
+      // If they share what's on their calendar, say what it is.
+      const titles = [...new Set(tb.map((i) => mainTitle(named?.[ds[i]])))];
+      if (titles.length === 1 && titles[0]) parts.push(`${them.name}: ${titles[0]} ${daysPhrase(tb)}`);
+      else parts.push(`${them.name}’s busy ${daysPhrase(tb)}`);
+    } else if (mb.length) parts.push(`You’re busy ${daysPhrase(mb)}`);
     if (tm.length) parts.push(`${them.name} said maybe ${daysPhrase(tm)}`);
     if (mm.length) parts.push(`You said maybe ${daysPhrase(mm)}`);
     note = parts.slice(0, 2).join(" · ") || "Partly free";
@@ -112,9 +124,9 @@ export async function loadWeekends(ctx: Ctx, count = 8) {
   const todayStr = today(TZ);
   const first = weekendFriday(todayStr);
   const last = addDays(first, 7 * (count - 1) + 2);
-  const { map, plans, connected } = await dayMap(first, last);
+  const [{ map, plans, connected }, named] = await Promise.all([dayMap(first, last), namedEventsFor(ctx.them.id, rangeDays(first, last))]);
   const rows: WeekendRow[] = [];
-  for (let i = 0; i < count; i++) rows.push(weekendRow(addDays(first, 7 * i), map, plans, ctx, todayStr));
+  for (let i = 0; i < count; i++) rows.push(weekendRow(addDays(first, 7 * i), map, plans, ctx, todayStr, named));
   const nextFree = rows.find((r) => !r.planned && !r.pending && addDays(r.fri, 2) >= todayStr && r.days[1].me === "f" && r.days[1].them === "f" && r.days[2].me === "f" && r.days[2].them === "f") ?? null;
   return { rows, nextFree, plans, connected };
 }
@@ -191,7 +203,7 @@ export async function loadHome(ctx: Ctx) {
 export async function loadWeekend(ctx: Ctx, fri: string) {
   const { me, them } = ctx;
   const ds = [fri, addDays(fri, 1), addDays(fri, 2)];
-  const { map, plans } = await dayMap(fri, ds[2]);
+  const [{ map, plans }, theirEvents] = await Promise.all([dayMap(fri, ds[2]), namedEventsFor(them.id, ds)]);
   const meW = { id: me.id, name: me.name, you: true };
   const themW = { id: them.id, name: them.name, you: false };
   const days = ds.map((d) => ({
@@ -199,7 +211,12 @@ export async function loadWeekend(ctx: Ctx, fri: string) {
     dow: dow(d),
     summary: daySummary(d, map[d], meW, themW),
     me: { state: map[d][me.id].state, signal: map[d][me.id].signal, lane: lane(map[d][me.id]) },
-    them: { state: map[d][them.id].state, signal: map[d][them.id].signal, lane: lane(map[d][them.id]) },
+    them: {
+      state: map[d][them.id].state,
+      signal: map[d][them.id].signal,
+      lane: lane(map[d][them.id]),
+      events: theirEvents ? theirEvents[d] ?? [] : null,
+    },
   }));
   const plannedId = days.map((d) => map[d.day][me.id].planId).find(Boolean) ?? null;
   const planned = plannedId ? plans.find((p) => p.id === plannedId) ?? null : null;

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { enterDemo, saveSettings } from "@/app/actions";
-import { InviteLink } from "@/components/client";
+import { InviteLink, ShareToggle } from "@/components/client";
 import { ChevronLeft } from "@/components/Icons";
 import { NotificationsToggle } from "@/components/Notifications";
 import { isDemo, people } from "@/lib/config";
@@ -10,9 +10,15 @@ import { getStore } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
+const SHARE_NOTES: Record<string, string> = {
+  declined: "Google didn’t share the event names. Try again and tick the box.",
+  account: "That was a different Google account. Try again with yours.",
+  cancelled: "Left as it was.",
+};
+
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; share?: string }> }) {
   const { me, them } = await requireViewer();
-  const { saved } = await searchParams;
+  const { saved, share } = await searchParams;
   const store = await getStore();
   const s = await store.settings(me.id);
   const demo = isDemo();
@@ -96,12 +102,15 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         </div>
       </form>
 
-      {!demo && (
-        <section className="stack" id="invite" style={{ gap: 14 }}>
-          <h2 className="h2">{them.name}</h2>
-          <InviteLink themName={them.name} joinedAs={theirEmail} />
-        </section>
-      )}
+      <section className="stack" id="share" style={{ gap: 14 }}>
+        <h2 className="h2">{them.name}</h2>
+        <ShareToggle themName={them.name} on={s.shareDetails} note={share ? SHARE_NOTES[share] ?? "Try once more." : null} />
+        {!demo && (
+          <div id="invite" style={{ marginTop: 10 }}>
+            <InviteLink themName={them.name} joinedAs={theirEmail} />
+          </div>
+        )}
+      </section>
 
       <section className="stack" style={{ gap: 14 }}>
         <h2 className="h2">Notifications</h2>

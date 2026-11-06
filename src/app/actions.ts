@@ -175,6 +175,22 @@ export async function finishOnboarding(): Promise<void> {
   redirect("/");
 }
 
+/**
+ * Turn "Let them see what's on my calendar" on or off.
+ * Turning it on needs one more Google permission; if we don't have it yet, the page sends you to Google.
+ */
+export async function setShareDetails(on: boolean): Promise<"ok" | "consent"> {
+  const { me } = await requireViewer();
+  const store = await getStore();
+  if (on && !isDemo()) {
+    const { canReadEvents } = await import("@/lib/google");
+    if (!(await canReadEvents(me.id))) return "consent";
+  }
+  await store.updateSettings(me.id, { shareDetails: on });
+  refresh();
+  return "ok";
+}
+
 /** A one-time link for the other person to join with whichever Google account they like. */
 export async function createInvite(): Promise<string | null> {
   const { them } = await requireViewer();

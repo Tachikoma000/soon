@@ -16,6 +16,7 @@ create table if not exists soon_people (
   onboarded boolean not null default false,
   updated_at timestamptz not null default now()
 );
+alter table soon_people add column if not exists share_details boolean not null default false;
 create table if not exists soon_signals (
   person_id text not null,
   day date not null,
@@ -123,6 +124,7 @@ export class PgStore implements Store {
       eventPrivate: Boolean(r.event_private),
       includeDrive: Boolean(r.include_drive),
       calendars: (r.calendars as string[]) ?? ["primary"],
+      shareDetails: Boolean(r.share_details),
       connected: Boolean(r.refresh_token),
       onboarded: Boolean(r.onboarded),
     };
@@ -138,6 +140,7 @@ export class PgStore implements Store {
         event_private = ${next.eventPrivate},
         include_drive = ${next.includeDrive},
         calendars = ${this.sql.json(next.calendars)},
+        share_details = ${next.shareDetails},
         onboarded = ${next.onboarded},
         updated_at = now()
       where id = ${id}`;

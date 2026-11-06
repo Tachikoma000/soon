@@ -13,6 +13,7 @@ export default function Privacy() {
 
       <h2 className="h2">What Soon reads from Google</h2>
       <p>When your free time is shown, Soon asks Google only <em>when</em> you’re busy on the calendars you choose. It never reads event titles, descriptions, locations or guests. It also reads the names of your calendars, so you can pick which ones count.</p>
+      <p>If you turn on “Let … see what’s on my calendar”, Soon also reads the names and times of events on those calendars and shows them to the other person, nobody else. Events you mark Private in Google show only as busy. Turn it off any time and Soon stops reading them.</p>
 
       <h2 className="h2">What Soon writes</h2>
       <p>When both of you agree to a plan, Soon adds one event for it to your main Google Calendar, with the title and privacy setting you picked. If the plan is cancelled, Soon removes that event. It doesn’t touch any other events.</p>

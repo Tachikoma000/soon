@@ -19,16 +19,19 @@ export const SCOPES = [
 
 const REQUIRED = SCOPES.slice(3);
 
+/** Asked for only when someone turns on "Let … see what's on my calendar". */
+export const DETAILS_SCOPE = "https://www.googleapis.com/auth/calendar.events.readonly";
+
 export function redirectUri(): string {
   return `${appUrl()}/api/auth/callback`;
 }
 
-export function authUrl(state: string): string {
+export function authUrl(state: string, withDetails = false): string {
   const q = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID as string,
     redirect_uri: redirectUri(),
     response_type: "code",
-    scope: SCOPES.join(" "),
+    scope: [...SCOPES, ...(withDetails ? [DETAILS_SCOPE] : [])].join(" "),
     access_type: "offline",
     // Always show the account chooser, so someone with several Google accounts picks the right one.
     prompt: "select_account consent",
@@ -46,7 +49,9 @@ type TokenResponse = {
   id_token?: string;
 };
 
-export async function exchangeCode(code: string): Promise<{ email: string; refreshToken: string | null; missingScopes: string[] }> {
+export async function exchangeCode(
+  code: string,
+): Promise<{ email: string; refreshToken: string | null; missingScopes: string[]; detailsGranted: boolean }> {
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -72,6 +77,7 @@ export async function exchangeCode(code: string): Promise<{ email: string; refre
     email: claims.email.toLowerCase(),
     refreshToken: t.refresh_token ?? null,
     missingScopes: REQUIRED.filter((s) => !granted.has(s)),
+    detailsGranted: granted.has(DETAILS_SCOPE),
   };
 }
 
@@ -81,7 +87,15 @@ export class NotConnectedError extends Error {
   }
 }
 
+/** The token is fine but doesn't cover what we asked for (e.g. reading event names). */
+export class ScopeError extends Error {}
+
 const accessCache = new Map<string, { token: string; expires: number }>();
+
+/** Drop a cached access token, e.g. right after someone grants a new permission. */
+export function forgetAccess(personId: string): void {
+  accessCache.delete(personId);
+}
 
 async function accessToken(personId: string): Promise<string> {
   const hit = accessCache.get(personId);
@@ -122,6 +136,14 @@ async function gcal<T>(personId: string, path: string, init?: RequestInit): Prom
   if (res.status === 401) {
     accessCache.delete(personId);
     throw new NotConnectedError(personId);
+  }
+  if (res.status === 403) {
+    const text = await res.text();
+    if (/insufficient|SCOPE/i.test(text)) {
+      accessCache.delete(personId);
+      throw new ScopeError(text);
+    }
+    throw new Error(`Google Calendar ${path} failed (403): ${text}`);
   }
   if (!res.ok) throw new Error(`Google Calendar ${path} failed (${res.status}): ${await res.text()}`);
   if (res.status === 204) return undefined as T;
@@ -191,6 +213,64 @@ export async function deleteEvent(personId: string, eventId: string): Promise<vo
   } catch (e) {
     // Already gone is fine.
     if (e instanceof Error && /\(410\)|\(404\)/.test(e.message)) return;
+    throw e;
+  }
+}
+
+export type RawEvent = { title: string; start: string; end: string; allDay: boolean };
+
+type ApiEvent = {
+  summary?: string;
+  status?: string;
+  transparency?: string;
+  visibility?: string;
+  eventType?: string;
+  start?: { date?: string; dateTime?: string };
+  end?: { date?: string; dateTime?: string };
+  attendees?: Array<{ self?: boolean; responseStatus?: string }>;
+};
+
+const SKIP_TYPES = new Set(["workingLocation", "birthday"]);
+
+/**
+ * Event names and times on the given calendars, only for people who chose to share them.
+ * Matches what free/busy counts: skips "Show as free", declined and cancelled events.
+ * Events marked private in Google come back as "Busy".
+ */
+export async function listEvents(personId: string, calendars: string[], timeMin: number, timeMax: number): Promise<RawEvent[]> {
+  const out: RawEvent[] = [];
+  for (const cal of (calendars.length ? calendars : ["primary"]).slice(0, 10)) {
+    const q = new URLSearchParams({
+      timeMin: new Date(timeMin).toISOString(),
+      timeMax: new Date(timeMax).toISOString(),
+      singleEvents: "true",
+      orderBy: "startTime",
+      maxResults: "250",
+      fields: "items(summary,status,transparency,visibility,eventType,start,end,attendees(self,responseStatus))",
+    });
+    const data = await gcal<{ items?: ApiEvent[] }>(personId, `/calendars/${encodeURIComponent(cal)}/events?${q}`);
+    for (const e of data.items || []) {
+      if (e.status === "cancelled" || e.transparency === "transparent") continue;
+      if (e.eventType && SKIP_TYPES.has(e.eventType)) continue;
+      if (e.attendees?.some((a) => a.self && a.responseStatus === "declined")) continue;
+      const start = e.start?.dateTime ?? e.start?.date;
+      const end = e.end?.dateTime ?? e.end?.date;
+      if (!start || !end) continue;
+      const hidden = e.visibility === "private" || e.visibility === "confidential";
+      out.push({ title: hidden ? "Busy" : (e.summary || "Busy").slice(0, 80), start, end, allDay: !e.start?.dateTime });
+    }
+  }
+  return out;
+}
+
+/** Whether the saved Google access already covers reading event names. */
+export async function canReadEvents(personId: string): Promise<boolean> {
+  try {
+    const q = new URLSearchParams({ maxResults: "1", fields: "items(id)" });
+    await gcal(personId, `/calendars/primary/events?${q}`);
+    return true;
+  } catch (e) {
+    if (e instanceof ScopeError || e instanceof NotConnectedError) return false;
     throw e;
   }
 }
