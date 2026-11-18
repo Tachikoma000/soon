@@ -1,0 +1,118 @@
+# Generate the Xcode project with: xcodegen generate   (brew install xcodegen)
+name: Soon
+options:
+  bundleIdPrefix: network.playgrounds
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    # Where the app finds the website and its API.
+    SOON_SERVER: https://soon-together.vercel.app
+
+targets:
+  Soon:
+    type: application
+    platform: iOS
+    sources:
+      - path: Soon
+        excludes:
+          - Demo
+      - path: Shared
+      - path: Fonts
+        buildPhase: resources
+      - path: Soon/Demo
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: network.playgrounds.soon
+        PRODUCT_NAME: Soon
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: Terra
+        INFOPLIST_KEY_CFBundleDisplayName: Soon
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+    info:
+      path: Soon/Info.plist
+      properties:
+        CFBundleDisplayName: Soon
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleURLTypes:
+          - CFBundleURLName: network.playgrounds.soon
+            CFBundleURLSchemes: [soon]
+        UIAppFonts: &fonts
+          - SoonDisplay-Regular.ttf
+          - SoonSerif-Regular.ttf
+          - SoonSerif-Italic.ttf
+          - SoonSans-Regular.ttf
+          - SoonSans-Medium.ttf
+          - SoonSans-SemiBold.ttf
+          - SoonHand-Medium.ttf
+        UILaunchScreen:
+          UIColorName: Paper
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [remote-notification]
+        NSSupportsLiveActivities: true
+        ITSAppUsesNonExemptEncryption: false
+        SoonServer: $(SOON_SERVER)
+    entitlements:
+      path: Soon/Soon.entitlements
+      properties:
+        aps-environment: development
+        com.apple.security.application-groups: [group.network.playgrounds.soon]
+    dependencies:
+      - target: SoonWidgets
+        embed: true
+
+  SoonWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SoonWidgets
+      - path: Shared
+      - path: Fonts
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: network.playgrounds.soon.widgets
+        PRODUCT_NAME: SoonWidgets
+        SKIP_INSTALL: YES
+    info:
+      path: SoonWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Soon
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        UIAppFonts: *fonts
+        SoonServer: $(SOON_SERVER)
+    entitlements:
+      path: SoonWidgets/SoonWidgets.entitlements
+      properties:
+        aps-environment: development
+        com.apple.security.application-groups: [group.network.playgrounds.soon]
+
+schemes:
+  Soon:
+    build:
+      targets:
+        Soon: all
+        SoonWidgets: all
+    run:
+      config: Debug
+    archive:
+      config: Release

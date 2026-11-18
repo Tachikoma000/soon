@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { personView, planView, roadView } from "@/lib/api";
-import { appUrl, DRIVE_MINUTES, isDemo, otherOf, person, TZ } from "@/lib/config";
+import { appUrl, DRIVE_MINUTES, isDemo, otherOf, people, person, TZ } from "@/lib/config";
 import { loadHome, loadMonth, loadPlans, loadWeekend, loadWeekends } from "@/lib/data";
 import { dow, isDay, today } from "@/lib/dates";
 import * as ops from "@/lib/ops";
@@ -60,6 +60,7 @@ async function meView(v: Viewer) {
     },
     theyJoined: theirs.connected,
     theyShare: theirs.shareDetails,
+    maker: people()[0].id === v.me.id,
     /** A fresh token each time, so the app never runs out. */
     token: isDemo() ? `demo:${v.me.id}` : await appToken(v.me.id),
   };
