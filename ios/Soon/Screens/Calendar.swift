@@ -44,7 +44,7 @@ struct CalendarScreen: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 let t = Days.month(ym)
-                (Text(t.name) + Text(t.year == String(thisMonth.prefix(4)) ? "" : " \(t.year)").foregroundStyle(Color.ink3))
+                Text("\(t.name)\(Text(t.year == String(thisMonth.prefix(4)) ? "" : " \(t.year)").foregroundStyle(Color.ink3))")
                     .font(Typeface.serif(36))
                     .em(-0.02, 36)
                     .foregroundStyle(Color.ink)

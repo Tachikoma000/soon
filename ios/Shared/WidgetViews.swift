@@ -36,7 +36,7 @@ struct WidgetContent {
     /// Later plans for the large widget.
     var later: [Plan] {
         let list = (data?.upcoming ?? []).filter { $0.endDay >= today && $0.id != plan?.id }
-        return Array(list.prefix(3))
+        return Array(list.prefix(2))
     }
 }
 
@@ -52,7 +52,7 @@ struct SmallWidgetView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
                     Spacer(minLength: 0)
-                    Sunflower(bloom: c.bloom, stem: false).frame(width: 38, height: 38)
+                    Sunflower(bloom: c.bloom).frame(height: 58).padding(.top, -6).padding(.trailing, -4)
                 }
                 Spacer(minLength: 0)
                 CountNumber(c: c, size: c.isNumber ? 56 : 34)
@@ -119,14 +119,16 @@ struct LargeWidgetView: View {
                 RoadMedium(road: road, them: content.them).frame(height: 132)
             } else if let c = content.countdown {
                 HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        CountNumber(c: c, size: c.isNumber ? 84 : 48)
-                        Text(c.line).font(Typeface.serif(22)).foregroundStyle(Color.ink).lineLimit(1).minimumScaleFactor(0.8)
+                    VStack(alignment: .leading, spacing: 10) {
+                        CountNumber(c: c, size: c.isNumber ? 100 : 54)
+                        Spacer(minLength: 0)
+                        Text(c.line).font(Typeface.serif(24)).foregroundStyle(Color.ink).lineLimit(1).minimumScaleFactor(0.8)
                         Text("\(c.plan.place) · \(c.plan.dayRange)").font(Typeface.sans(12.5)).foregroundStyle(Color.ink2).lineLimit(1)
                     }
                     Spacer(minLength: 0)
-                    Sunflower(bloom: c.bloom, sway: false).frame(height: 150).padding(.bottom, -8)
+                    Sunflower(bloom: c.bloom).frame(height: 196).padding(.bottom, -6)
                 }
+                .frame(maxHeight: content.later.isEmpty && content.nextFree == nil ? .infinity : 226, alignment: .top)
             } else {
                 NothingYet()
             }
@@ -267,8 +269,8 @@ struct CircularWidgetView: View {
                 AccessoryWidgetBackground()
                 VStack(spacing: 0) {
                     Image(systemName: "car.side").font(.system(size: 13, weight: .semibold))
-                    Text(road.etaDate, format: .dateTime.hour().minute())
-                        .font(.system(size: 12, weight: .semibold))
+                    Text(Days.clock(road.etaDate, meridiem: false))
+                        .font(.system(size: 14, weight: .semibold))
                         .minimumScaleFactor(0.7)
                 }
             }

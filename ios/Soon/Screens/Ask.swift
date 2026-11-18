@@ -111,7 +111,8 @@ struct AskScreen: View {
                     .font(Typeface.sans(15.5))
                     .tint(.terra)
                 } label: {
-                    (Text("On my calendar as ").foregroundStyle(Color.ink2) + Text(shownTitle.isEmpty ? "…" : shownTitle).foregroundStyle(Color.ink) + Text(isPrivate ? ", private" : "").foregroundStyle(Color.ink2))
+                    Text("On my calendar as \(Text(shownTitle.isEmpty ? "…" : shownTitle).foregroundStyle(Color.ink))\(isPrivate ? ", private" : "")")
+                        .foregroundStyle(Color.ink2)
                         .font(Typeface.sans(15))
                         .lineLimit(1)
                 }

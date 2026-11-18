@@ -135,7 +135,7 @@ struct Gallery: View {
             HStack {
                 SunMark(size: 18)
                 Spacer()
-                Text(roadState.etaDate, format: .dateTime.hour().minute()).font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.sun)
+                Text(Days.clock(roadState.etaDate, meridiem: false)).font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.sun)
             }
             .padding(.horizontal, 14)
             .frame(width: 250, height: 37)
@@ -146,7 +146,7 @@ struct Gallery: View {
                     Spacer()
                     Text(words.title).font(Typeface.serif(19)).foregroundStyle(.white)
                     Spacer()
-                    Text(roadState.etaDate, format: .dateTime.hour().minute()).font(Typeface.sans(16, .medium)).foregroundStyle(Color.sun)
+                    Text(Days.clock(roadState.etaDate)).font(Typeface.sans(16, .medium)).foregroundStyle(Color.sun)
                 }
                 RoadIslandBottom(words: words)
             }

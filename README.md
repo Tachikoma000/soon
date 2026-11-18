@@ -111,13 +111,15 @@ Ordinary 9–5 workdays don't count, otherwise every weekday would look blocked.
 
 ```
 src/app/            pages (home, weekend, calendar, propose, plans, settings, welcome, hello)
-src/app/actions.ts  everything that changes data
-src/app/api/        Google sign-in, notifications
+src/app/actions.ts  the website's forms, calling src/lib/ops.ts
+src/app/api/        Google sign-in, notifications, and /api/v1 for the iPhone app
+src/lib/ops.ts      everything that changes data, shared by the website and the app
+src/lib/apns.ts     Apple push for the iPhone app
 src/lib/            availability rules, Google client, data loaders, storage (demo + Postgres)
 src/components/     sunflower, dots, month picker, forms
 public/sw.js        service worker for notifications and the app badge
 ```
 
-## Later
+## iPhone app
 
-Home-screen and lock-screen widgets need a native iOS app. The plan is a small companion app that reads the same data: a countdown widget with the blooming sunflower, a lock-screen ring, and a Live Activity for "on the way".
+`ios/` holds a native SwiftUI app with Home Screen and Lock Screen widgets, an "on the way" Live Activity, and notifications you can answer from. It uses this site's `/api/v1`, so plans, calendars and settings stay in one place. See [ios/README.md](ios/README.md).

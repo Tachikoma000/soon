@@ -142,7 +142,7 @@ private struct Notice: View {
 
     var body: some View {
         Button(action: tap) {
-            (Text(text + " ") + Text(action).underline())
+            Text("\(text) \(Text(action).underline())")
                 .font(Typeface.sans(15))
                 .foregroundStyle(Color.ink)
                 .multilineTextAlignment(.leading)

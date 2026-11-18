@@ -72,7 +72,7 @@ struct Tabs: View {
             Tab("Calendar", systemImage: "calendar", value: AppModel.Tab.calendar) {
                 NavigationStack { CalendarScreen() }
             }
-            Tab("Plans", systemImage: "suitcase", value: AppModel.Tab.plans) {
+            Tab("Plans", systemImage: "point.topleft.down.to.point.bottomright.curvepath", value: AppModel.Tab.plans) {
                 NavigationStack { PlansScreen() }
             }
             .badge(model.home?.incoming.count ?? 0)

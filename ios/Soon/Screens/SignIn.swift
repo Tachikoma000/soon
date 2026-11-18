@@ -26,7 +26,7 @@ struct SignIn: View {
                     Text(error).font(Typeface.sans(14)).foregroundStyle(Color.ink2).multilineTextAlignment(.center)
                 }
                 WorkButton { await signIn() } label: { Text("Continue with Google") }
-                (Text("It only sees ") + Text("when").font(Typeface.italic(13.5)) + Text(" you’re busy, never what."))
+                Text("It only sees \(Text("when").font(Typeface.italic(13.5))) you’re busy, never what.")
                     .font(Typeface.sans(13))
                     .foregroundStyle(Color.ink3)
             }

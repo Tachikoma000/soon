@@ -130,7 +130,7 @@ struct RoadLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     if !context.state.arrived {
-                        Text(context.state.etaDate, format: .dateTime.hour().minute())
+                        Text(Days.clock(context.state.etaDate))
                             .font(Typeface.sans(16, .medium))
                             .foregroundStyle(Color.sun)
                             .padding(.trailing, 6)
@@ -148,7 +148,7 @@ struct RoadLiveActivity: Widget {
                 if context.state.arrived {
                     Image(systemName: "heart.fill").foregroundStyle(Color.sun)
                 } else {
-                    Text(context.state.etaDate, format: .dateTime.hour().minute())
+                    Text(Days.clock(context.state.etaDate, meridiem: false))
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Color.sun)
                 }

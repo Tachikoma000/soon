@@ -107,9 +107,10 @@ enum Days {
         (a < 720) == (b < 720) ? "\(time(a, meridiem: false)) – \(time(b))" : "\(time(a)) – \(time(b))"
     }
 
-    static func clock(_ date: Date) -> String {
+    /// "7:15 pm" in your shared time zone (or "7:15" without the am/pm).
+    static func clock(_ date: Date, meridiem: Bool = true) -> String {
         let c = calendar.dateComponents([.hour, .minute], from: date)
-        return time((c.hour ?? 0) * 60 + (c.minute ?? 0))
+        return time((c.hour ?? 0) * 60 + (c.minute ?? 0), meridiem: meridiem)
     }
 
     static func month(_ ym: String) -> (name: String, year: String) {
