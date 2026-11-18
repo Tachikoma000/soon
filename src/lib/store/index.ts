@@ -1,4 +1,4 @@
-import type { Plan, PersonSettings, PushSub, Road, Signal, SignalValue } from "../types";
+import type { Device, DeviceKind, Plan, PersonSettings, PushSub, Road, Signal, SignalValue } from "../types";
 import { databaseUrl, isDemo } from "../config";
 
 export type NewPlan = Omit<Plan, "id" | "createdAt" | "respondedAt" | "eventIds" | "status">;
@@ -35,6 +35,12 @@ export interface Store {
   pushSubs(personId: string): Promise<PushSub[]>;
   addPushSub(s: PushSub): Promise<void>;
   removePushSub(endpoint: string): Promise<void>;
+
+  /** iPhone push tokens. */
+  devices(personId: string, kind?: DeviceKind): Promise<Device[]>;
+  addDevice(d: Device): Promise<void>;
+  removeDevice(token: string, kind: DeviceKind): Promise<void>;
+  removeDevicesOfKind(kind: DeviceKind): Promise<void>;
 }
 
 let store: Store | null = null;

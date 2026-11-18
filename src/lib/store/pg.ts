@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import type { Plan, PersonSettings, PushSub, Road, Signal, SignalValue } from "../types";
+import type { Device, DeviceKind, Plan, PersonSettings, PushSub, Road, Signal, SignalValue } from "../types";
 import type { NewPlan, Store } from "./index";
 import { people } from "../config";
 
@@ -51,6 +51,15 @@ create table if not exists soon_push (
   person_id text not null,
   keys jsonb not null,
   created_at timestamptz not null default now()
+);
+create table if not exists soon_devices (
+  token text not null,
+  kind text not null check (kind in ('alert','start','activity','widget')),
+  person_id text not null,
+  env text not null check (env in ('sandbox','production')),
+  ref text,
+  updated_at timestamptz not null default now(),
+  primary key (token, kind)
 );
 `;
 
@@ -274,5 +283,33 @@ export class PgStore implements Store {
   async removePushSub(endpoint: string) {
     await this.init();
     await this.sql`delete from soon_push where endpoint = ${endpoint}`;
+  }
+
+  async devices(personId: string, kind?: DeviceKind): Promise<Device[]> {
+    await this.init();
+    const rows = kind
+      ? await this.sql<Row[]>`select * from soon_devices where person_id = ${personId} and kind = ${kind}`
+      : await this.sql<Row[]>`select * from soon_devices where person_id = ${personId}`;
+    return rows.map((r) => ({
+      token: String(r.token),
+      personId: String(r.person_id),
+      kind: r.kind as DeviceKind,
+      env: r.env as Device["env"],
+      ref: (r.ref as string | null) ?? null,
+    }));
+  }
+  async addDevice(d: Device) {
+    await this.init();
+    await this.sql`
+      insert into soon_devices (token, kind, person_id, env, ref) values (${d.token}, ${d.kind}, ${d.personId}, ${d.env}, ${d.ref})
+      on conflict (token, kind) do update set person_id = excluded.person_id, env = excluded.env, ref = excluded.ref, updated_at = now()`;
+  }
+  async removeDevice(token: string, kind: DeviceKind) {
+    await this.init();
+    await this.sql`delete from soon_devices where token = ${token} and kind = ${kind}`;
+  }
+  async removeDevicesOfKind(kind: DeviceKind) {
+    await this.init();
+    await this.sql`delete from soon_devices where kind = ${kind}`;
   }
 }

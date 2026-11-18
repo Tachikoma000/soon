@@ -87,3 +87,15 @@ export function googleConfigured(): boolean {
 export function pushConfigured(): boolean {
   return Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 }
+
+/** Apple push for the iPhone app: a .p8 key from the Apple Developer account. */
+export function apnsConfigured(): boolean {
+  return Boolean(process.env.APNS_KEY_ID && process.env.APNS_TEAM_ID && process.env.APNS_KEY && apnsBundleId());
+}
+
+export function apnsBundleId(): string {
+  return process.env.APNS_BUNDLE_ID || "network.playgrounds.soon";
+}
+
+/** Where the iPhone app is sent back to after signing in with Google. */
+export const APP_SCHEME = "soon";

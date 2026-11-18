@@ -1,7 +1,7 @@
 // Demo mode: an in-memory store seeded with a believable couple of months,
 // laid out relative to today so the app always looks alive.
 
-import type { Interval, Plan, PersonSettings, PushSub, Road, Signal, SignalValue } from "../types";
+import type { Device, DeviceKind, Interval, Plan, PersonSettings, PushSub, Road, Signal, SignalValue } from "../types";
 import type { NewPlan, Store } from "./index";
 import { people, TZ } from "../config";
 import { addDays, dow, instantOf, today, weekendFriday } from "../dates";
@@ -11,6 +11,7 @@ type DemoState = {
   signals: Map<string, Signal>;
   plans: Map<string, Plan>;
   road: Road | null;
+  devices: Device[];
 };
 
 const g = globalThis as unknown as { __soonDemo?: DemoState };
@@ -43,7 +44,7 @@ function seed(): DemoState {
   sig(b.id, at(36), "maybe");
   sig(a.id, at(52), "maybe");
 
-  return { settings, signals, plans, road: null };
+  return { settings, signals, plans, road: null, devices: [] };
 }
 
 function state(): DemoState {
@@ -170,4 +171,20 @@ export class DemoStore implements Store {
   }
   async addPushSub() {}
   async removePushSub() {}
+
+  async devices(personId: string, kind?: DeviceKind): Promise<Device[]> {
+    return state().devices.filter((d) => d.personId === personId && (!kind || d.kind === kind));
+  }
+  async addDevice(d: Device) {
+    const s = state();
+    s.devices = [...s.devices.filter((x) => !(x.token === d.token && x.kind === d.kind)), d];
+  }
+  async removeDevice(token: string, kind: DeviceKind) {
+    const s = state();
+    s.devices = s.devices.filter((x) => !(x.token === token && x.kind === kind));
+  }
+  async removeDevicesOfKind(kind: DeviceKind) {
+    const s = state();
+    s.devices = s.devices.filter((x) => x.kind !== kind);
+  }
 }

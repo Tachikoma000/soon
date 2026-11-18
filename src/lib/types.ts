@@ -58,4 +58,20 @@ export type PushSub = {
   keys: { p256dh: string; auth: string };
 };
 
+/**
+ * An iPhone push token.
+ * alert: ordinary notifications · start: can start an "on the way" Live Activity ·
+ * activity: one running Live Activity · widget: reloads widgets.
+ */
+export type DeviceKind = "alert" | "start" | "activity" | "widget";
+
+export type Device = {
+  token: string;
+  personId: string;
+  kind: DeviceKind;
+  env: "sandbox" | "production";
+  /** For an activity token, which drive it follows. */
+  ref: string | null;
+};
+
 export type Interval = { start: number; end: number };
