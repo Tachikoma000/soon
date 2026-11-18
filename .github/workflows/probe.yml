@@ -1,0 +1,14 @@
+name: probe
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/probe.yml"]
+jobs:
+  probe:
+    runs-on: macos-latest
+    steps:
+      - run: |
+          xcodebuild -version
+          ls /Applications | grep -i xcode
+          xcrun simctl list runtimes | tail -5
+          sw_vers
