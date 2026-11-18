@@ -123,7 +123,7 @@ struct LargeWidgetView: View {
                         CountNumber(c: c, size: c.isNumber ? 100 : 54)
                         Spacer(minLength: 0)
                         Text(c.line).font(Typeface.serif(24)).foregroundStyle(Color.ink).lineLimit(1).minimumScaleFactor(0.8)
-                        Text("\(c.plan.place) · \(c.plan.dayRange)").font(Typeface.sans(12.5)).foregroundStyle(Color.ink2).lineLimit(1)
+                        Text("\(c.plan.place) · \(c.plan.range)").font(Typeface.sans(12.5)).foregroundStyle(Color.ink2).lineLimit(1)
                     }
                     Spacer(minLength: 0)
                     Sunflower(bloom: c.bloom).frame(height: 196).padding(.bottom, -6)
